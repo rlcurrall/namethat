@@ -7,7 +7,7 @@ RUN \
   --mount=type=cache,target=/app/target/ \
   --mount=type=cache,target=/usr/local/cargo/registry/ \
   /bin/bash -c \
-  'ls -al .sqlx && test -d .sqlx && cargo build --locked --release --package namethat && \
+  'cargo build --locked --release --package namethat && \
   cp ./target/release/namethat /app'
 
 FROM debian:bullseye-slim AS final
