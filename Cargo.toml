@@ -35,7 +35,7 @@ version = "0.8.5"
 features = ["min_const_gen"]
 
 [dependencies.sqlx]
-version = "0.7.1"
+version = "0.6.3"
 default-features = false
 features = ["default", "chrono", "postgres", "runtime-tokio-rustls", "time", "uuid"]
 
