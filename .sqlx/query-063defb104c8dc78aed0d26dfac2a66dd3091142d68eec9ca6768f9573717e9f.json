@@ -1,0 +1,75 @@
+{
+  "db_name": "PostgreSQL",
+  "query": "\n            SELECT id, user_id, name, image_urls, status as \"status: GameStatus\", winner\n            FROM games\n            WHERE\n                ($1::uuid IS NULL OR user_id = $1::uuid) AND\n                ($2::game_status IS NULL OR status = $2::game_status)\n            ",
+  "describe": {
+    "columns": [
+      {
+        "ordinal": 0,
+        "name": "id",
+        "type_info": "Uuid"
+      },
+      {
+        "ordinal": 1,
+        "name": "user_id",
+        "type_info": "Uuid"
+      },
+      {
+        "ordinal": 2,
+        "name": "name",
+        "type_info": "Varchar"
+      },
+      {
+        "ordinal": 3,
+        "name": "image_urls",
+        "type_info": "VarcharArray"
+      },
+      {
+        "ordinal": 4,
+        "name": "status: GameStatus",
+        "type_info": {
+          "Custom": {
+            "name": "game_status",
+            "kind": {
+              "Enum": [
+                "pending",
+                "started",
+                "finished"
+              ]
+            }
+          }
+        }
+      },
+      {
+        "ordinal": 5,
+        "name": "winner",
+        "type_info": "Uuid"
+      }
+    ],
+    "parameters": {
+      "Left": [
+        "Uuid",
+        {
+          "Custom": {
+            "name": "game_status",
+            "kind": {
+              "Enum": [
+                "pending",
+                "started",
+                "finished"
+              ]
+            }
+          }
+        }
+      ]
+    },
+    "nullable": [
+      false,
+      false,
+      false,
+      false,
+      false,
+      true
+    ]
+  },
+  "hash": "063defb104c8dc78aed0d26dfac2a66dd3091142d68eec9ca6768f9573717e9f"
+}

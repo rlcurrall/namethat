@@ -1,0 +1,52 @@
+{
+  "db_name": "PostgreSQL",
+  "query": "\n            SELECT a.id, a.round_id, a.player_id, a.value, a.likes, a.shown\n            FROM answers a\n            join rounds r on r.id = a.round_id\n            WHERE r.game_id = ANY($1)\n            ORDER BY a.created ASC\n            ",
+  "describe": {
+    "columns": [
+      {
+        "ordinal": 0,
+        "name": "id",
+        "type_info": "Uuid"
+      },
+      {
+        "ordinal": 1,
+        "name": "round_id",
+        "type_info": "Uuid"
+      },
+      {
+        "ordinal": 2,
+        "name": "player_id",
+        "type_info": "Uuid"
+      },
+      {
+        "ordinal": 3,
+        "name": "value",
+        "type_info": "Varchar"
+      },
+      {
+        "ordinal": 4,
+        "name": "likes",
+        "type_info": "Int4"
+      },
+      {
+        "ordinal": 5,
+        "name": "shown",
+        "type_info": "Bool"
+      }
+    ],
+    "parameters": {
+      "Left": [
+        "UuidArray"
+      ]
+    },
+    "nullable": [
+      false,
+      false,
+      false,
+      false,
+      false,
+      false
+    ]
+  },
+  "hash": "051cc5a11493db57003a009a25b97e4213f4725e99f5eef118056c44c0f49288"
+}
