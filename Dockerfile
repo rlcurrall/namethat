@@ -3,7 +3,6 @@ ARG RUST_VERSION=1.71.0
 FROM rust:${RUST_VERSION}-slim-bullseye AS builder
 WORKDIR /app
 COPY . .
-COPY .sqlx .sqlx
 RUN \
   --mount=type=cache,target=/app/target/ \
   --mount=type=cache,target=/usr/local/cargo/registry/ \
