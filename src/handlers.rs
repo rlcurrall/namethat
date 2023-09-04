@@ -2,12 +2,11 @@ use std::sync::Arc;
 
 use axum::{
     body::Body,
-    extract::State,
     routing::{get, post},
     Router,
 };
 
-use crate::{error::AppError, models::games::GameFilter, AppState};
+use crate::AppState;
 
 pub mod auth;
 pub mod games;
@@ -48,76 +47,5 @@ impl AppRouter {
                     .put(profile::update)
                     .delete(profile::delete),
             )
-            .route("/test", get(test))
     }
-}
-
-async fn test(State(state): State<Arc<AppState>>) -> crate::error::Result<&'static str> {
-    let games = state
-        .game_repo
-        .list(GameFilter {
-            user_id: None,
-            status: None,
-        })
-        .await?;
-
-    let _game = games
-        .first()
-        .ok_or(AppError::NotFoundError("nope".into()))?;
-
-    // Add player
-    // let _ = state.game_repo.add_player(game.id, "robb".into()).await;
-    // let r = state.game_repo.add_player(game.id, "tom".into()).await;
-    // println!("{:?}", r);
-
-    // Add Round
-    // let round = NewRound {
-    //     game_id: game.id,
-    //     round_number: 1,
-    //     image_url: "https://example.com/image.png".into(),
-    // };
-    // let r = state.game_repo.add_round(round).await?;
-    // println!("{:?}", r);
-
-    // Add answer
-    // let r = state
-    //     .game_repo
-    //     .add_answer(NewAnswer {
-    //         game_id: game.id,
-    //         round_number: 1,
-    //         username: "robb".into(),
-    //         value: "answer".into(),
-    //     })
-    //     .await;
-    // println!("{:?}", r);
-
-    // Increment like
-    // let r = {
-    //     let ref this = state.game_repo;
-    //     let answer_id = game.id;
-    //     async move {
-    //         sqlx::query!(
-    //             r#"
-    //         UPDATE answers
-    //         SET likes = COALESCE(likes, 0) + 1
-    //         WHERE id = $1
-    //         "#,
-    //             answer_id
-    //         )
-    //         .execute(&this.client)
-    //         .await?;
-    //         Ok(this.get_game_by_answer_id(&answer_id).await?)
-    //     }
-    // }
-    // .await;
-    // println!("{:?}", r);
-
-    // Increment score
-    // let r = state
-    //     .game_repo
-    //     .increment_score(game.id, "robb".into())
-    //     .await;
-    // println!("{:?}", r);
-
-    return Ok("ok");
 }
