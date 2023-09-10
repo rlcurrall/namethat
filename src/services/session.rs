@@ -3,7 +3,7 @@ use serde::de::DeserializeOwned;
 use uuid::Uuid;
 
 use crate::{
-    error::{AppError, Result},
+    error::{AppError, AppResult},
     session::SessionStore as Store,
 };
 
@@ -17,7 +17,7 @@ impl SessionManager {
         Self { session_store }
     }
 
-    pub async fn get<T: DeserializeOwned>(&self, id: &str, key: String) -> Result<Option<T>> {
+    pub async fn get<T: DeserializeOwned>(&self, id: &str, key: String) -> AppResult<Option<T>> {
         let session = self
             .session_store
             .load_by_id(id)
@@ -35,7 +35,7 @@ impl SessionManager {
         id: &str,
         key: String,
         value: T,
-    ) -> Result<()> {
+    ) -> AppResult<()> {
         let mut session = self
             .session_store
             .load_by_id(id)
@@ -60,12 +60,12 @@ impl SessionManager {
         id: &str,
         game_id: &Uuid,
         player_id: &Uuid,
-    ) -> Result<()> {
+    ) -> AppResult<()> {
         self.set(id, format!("game-{}-username", game_id), player_id)
             .await
     }
 
-    pub async fn get_game_display_name(&self, id: &str, game_id: &Uuid) -> Result<Option<Uuid>> {
+    pub async fn get_game_display_name(&self, id: &str, game_id: &Uuid) -> AppResult<Option<Uuid>> {
         self.get(id, format!("game-{}-username", game_id)).await
     }
 }

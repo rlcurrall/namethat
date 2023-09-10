@@ -4,7 +4,7 @@ use sqlx::PgPool;
 use uuid::Uuid;
 
 use crate::{
-    error::{AppError, Result},
+    error::{AppError, AppResult},
     models::games::{
         Answer, Game, GameFilter, GameState, GameStatus, NewAnswer, NewGame, NewRound, Player,
         Round, UpdateGame,
@@ -25,7 +25,7 @@ impl GameRepo {
     // Basic CRUD operations
     // -------------------------------------------------------------------------
 
-    pub async fn insert(&self, new_game: NewGame) -> Result<Game> {
+    pub async fn insert(&self, new_game: NewGame) -> AppResult<Game> {
         let game_id = sqlx::query!(
             r#"
             INSERT INTO games (user_id, name, image_urls)
@@ -43,7 +43,7 @@ impl GameRepo {
         Ok(self.get(&game_id).await?)
     }
 
-    pub async fn get(&self, id: &Uuid) -> Result<Game> {
+    pub async fn get(&self, id: &Uuid) -> AppResult<Game> {
         let mut game: Game = sqlx::query_as!(
             GameRow,
             r#"
@@ -79,7 +79,7 @@ impl GameRepo {
         Ok(game)
     }
 
-    pub async fn list(&self, filter: GameFilter) -> Result<Vec<Game>> {
+    pub async fn list(&self, filter: GameFilter) -> AppResult<Vec<Game>> {
         let results = sqlx::query_as!(
             GameRow,
             r#"
@@ -139,7 +139,7 @@ impl GameRepo {
         Ok(games)
     }
 
-    pub async fn update(&self, id: Uuid, update_game: UpdateGame) -> Result<Game> {
+    pub async fn update(&self, id: Uuid, update_game: UpdateGame) -> AppResult<Game> {
         sqlx::query!(
             r#"
             UPDATE games
@@ -156,7 +156,7 @@ impl GameRepo {
         Ok(self.get(&id).await?)
     }
 
-    pub async fn delete(&self, id: Uuid) -> Result<()> {
+    pub async fn delete(&self, id: Uuid) -> AppResult<()> {
         sqlx::query!(
             r#"
             DELETE FROM games
@@ -169,7 +169,7 @@ impl GameRepo {
         Ok(())
     }
 
-    pub async fn get_state(&self, id: &Uuid) -> Result<GameState> {
+    pub async fn get_state(&self, id: &Uuid) -> AppResult<GameState> {
         let game = self.get(&id).await?;
         let round = game.rounds.last();
         let round_id = round.and_then(|r| Some(r.id));
@@ -221,7 +221,7 @@ impl GameRepo {
     // Game logic
     // -------------------------------------------------------------------------
 
-    pub async fn get_player(&self, id: &Uuid) -> Result<Player> {
+    pub async fn get_player(&self, id: &Uuid) -> AppResult<Player> {
         let player = sqlx::query_as!(
             Player,
             r#"
@@ -242,7 +242,7 @@ impl GameRepo {
         game_id: &Uuid,
         username: &str,
         is_observer: &bool,
-    ) -> Result<Game> {
+    ) -> AppResult<Game> {
         sqlx::query!(
             r#"
             INSERT INTO players (game_id, username, active, is_observer)
@@ -259,7 +259,7 @@ impl GameRepo {
         Ok(self.get(&game_id).await?)
     }
 
-    pub async fn remove_player(&self, id: &Uuid) -> Result<()> {
+    pub async fn remove_player(&self, id: &Uuid) -> AppResult<()> {
         sqlx::query!(
             r#"
             DELETE FROM players
@@ -273,7 +273,7 @@ impl GameRepo {
         Ok(())
     }
 
-    pub async fn mark_player_active(&self, id: &Uuid) -> Result<Game> {
+    pub async fn mark_player_active(&self, id: &Uuid) -> AppResult<Game> {
         let game_id = sqlx::query!(
             r#"
             UPDATE players
@@ -290,7 +290,7 @@ impl GameRepo {
         Ok(self.get(&game_id).await?)
     }
 
-    pub async fn mark_player_inactive(&self, id: &Uuid) -> Result<Game> {
+    pub async fn mark_player_inactive(&self, id: &Uuid) -> AppResult<Game> {
         let game_id = sqlx::query!(
             r#"
             UPDATE players
@@ -307,7 +307,7 @@ impl GameRepo {
         Ok(self.get(&game_id).await?)
     }
 
-    pub async fn start(&self, game_id: &Uuid) -> Result<Game> {
+    pub async fn start(&self, game_id: &Uuid) -> AppResult<Game> {
         sqlx::query!(
             r#"
             UPDATE games
@@ -322,7 +322,7 @@ impl GameRepo {
         Ok(self.get(&game_id).await?)
     }
 
-    pub async fn add_round(&self, round: NewRound) -> Result<Game> {
+    pub async fn add_round(&self, round: NewRound) -> AppResult<Game> {
         sqlx::query!(
             r#"
             INSERT INTO rounds (game_id, round_number, image_url)
@@ -338,7 +338,7 @@ impl GameRepo {
         Ok(self.get(&round.game_id).await?)
     }
 
-    pub async fn add_answer(&self, answer: NewAnswer) -> Result<Game> {
+    pub async fn add_answer(&self, answer: NewAnswer) -> AppResult<Game> {
         let game = self.get_by_round_id(&answer.round_id).await?;
         if !game.players.iter().any(|p| p.id == answer.player_id) {
             return Err(AppError::ValidationError(
@@ -361,7 +361,7 @@ impl GameRepo {
         Ok(self.get_by_round_id(&answer.round_id).await?)
     }
 
-    pub async fn increment_like(&self, answer_id: &Uuid) -> Result<Game> {
+    pub async fn increment_like(&self, answer_id: &Uuid) -> AppResult<Game> {
         sqlx::query!(
             r#"
             UPDATE answers
@@ -376,7 +376,7 @@ impl GameRepo {
         Ok(self.get_by_answer_id(&answer_id).await?)
     }
 
-    pub async fn close_answers(&self, round_id: &Uuid) -> Result<Game> {
+    pub async fn close_answers(&self, round_id: &Uuid) -> AppResult<Game> {
         sqlx::query!(
             r#"
             UPDATE rounds
@@ -391,7 +391,7 @@ impl GameRepo {
         Ok(self.get_by_round_id(&round_id).await?)
     }
 
-    pub async fn show_answer(&self, answer_id: &Uuid) -> Result<Game> {
+    pub async fn show_answer(&self, answer_id: &Uuid) -> AppResult<Game> {
         sqlx::query!(
             r#"
             UPDATE answers
@@ -406,7 +406,7 @@ impl GameRepo {
         Ok(self.get_by_answer_id(&answer_id).await?)
     }
 
-    pub async fn end_round(&self, round_id: &Uuid, winner: &Uuid) -> Result<Game> {
+    pub async fn end_round(&self, round_id: &Uuid, winner: &Uuid) -> AppResult<Game> {
         sqlx::query!(
             r#"
             UPDATE rounds
@@ -422,7 +422,7 @@ impl GameRepo {
         Ok(self.get_by_round_id(&round_id).await?)
     }
 
-    pub async fn increment_score(&self, player_id: &Uuid) -> Result<Game> {
+    pub async fn increment_score(&self, player_id: &Uuid) -> AppResult<Game> {
         let game_id = sqlx::query!(
             r#"
             UPDATE players
@@ -439,7 +439,7 @@ impl GameRepo {
         Ok(self.get(&game_id).await?)
     }
 
-    pub async fn end(&self, game_id: &Uuid) -> Result<Game> {
+    pub async fn end(&self, game_id: &Uuid) -> AppResult<Game> {
         let game = self.get(&game_id).await?;
 
         // Get user with highest score
@@ -471,7 +471,7 @@ impl GameRepo {
     // Helper methods
     // -------------------------------------------------------------------------
 
-    async fn get_rounds_for_game(&self, game_id: &Uuid) -> Result<Vec<Round>> {
+    async fn get_rounds_for_game(&self, game_id: &Uuid) -> AppResult<Vec<Round>> {
         Ok(sqlx::query_as!(
             RoundRow,
             r#"
@@ -488,7 +488,7 @@ impl GameRepo {
         .collect())
     }
 
-    async fn get_rounds_for_games(&self, game_ids: &Vec<Uuid>) -> Result<Vec<Round>> {
+    async fn get_rounds_for_games(&self, game_ids: &Vec<Uuid>) -> AppResult<Vec<Round>> {
         Ok(sqlx::query_as!(
             RoundRow,
             r#"
@@ -505,7 +505,7 @@ impl GameRepo {
         .collect())
     }
 
-    async fn get_players_for_game(&self, game_id: &Uuid) -> Result<Vec<Player>> {
+    async fn get_players_for_game(&self, game_id: &Uuid) -> AppResult<Vec<Player>> {
         let players = sqlx::query_as!(
             Player,
             r#"
@@ -521,7 +521,7 @@ impl GameRepo {
         Ok(players)
     }
 
-    async fn get_players_for_games(&self, game_ids: &Vec<Uuid>) -> Result<Vec<Player>> {
+    async fn get_players_for_games(&self, game_ids: &Vec<Uuid>) -> AppResult<Vec<Player>> {
         let players = sqlx::query_as!(
             Player,
             r#"
@@ -537,7 +537,7 @@ impl GameRepo {
         Ok(players)
     }
 
-    async fn get_answers_for_game(&self, game_id: &Uuid) -> Result<Vec<Answer>> {
+    async fn get_answers_for_game(&self, game_id: &Uuid) -> AppResult<Vec<Answer>> {
         Ok(sqlx::query_as!(
             Answer,
             r#"
@@ -553,7 +553,7 @@ impl GameRepo {
         .await?)
     }
 
-    async fn get_answers_for_games(&self, game_ids: &Vec<Uuid>) -> Result<Vec<Answer>> {
+    async fn get_answers_for_games(&self, game_ids: &Vec<Uuid>) -> AppResult<Vec<Answer>> {
         Ok(sqlx::query_as!(
             Answer,
             r#"
@@ -569,7 +569,7 @@ impl GameRepo {
         .await?)
     }
 
-    pub async fn get_by_round_id(&self, round_id: &Uuid) -> Result<Game> {
+    pub async fn get_by_round_id(&self, round_id: &Uuid) -> AppResult<Game> {
         let game_id = sqlx::query!(
             r#"
             SELECT g.id
@@ -585,7 +585,7 @@ impl GameRepo {
         Ok(self.get(&game_id).await?)
     }
 
-    pub async fn get_by_answer_id(&self, answer_id: &Uuid) -> Result<Game> {
+    pub async fn get_by_answer_id(&self, answer_id: &Uuid) -> AppResult<Game> {
         let game_id = sqlx::query!(
             r#"
             SELECT g.id

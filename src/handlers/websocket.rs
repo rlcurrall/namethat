@@ -13,7 +13,7 @@ use tokio::sync::broadcast::Receiver;
 use uuid::Uuid;
 
 use crate::{
-    error::{AppError, Result},
+    error::{AppError, AppResult},
     extractors::auth::AuthUser,
     models::{
         games::{GameAction, GameBroadcast, GameStatus, PlayerType},
@@ -29,7 +29,7 @@ pub async fn game_websocket(
     session: WritableSession,
     State(state): State<Arc<AppState>>,
     Path(game_id): Path<Uuid>,
-) -> crate::error::Result<impl IntoResponse> {
+) -> crate::error::AppResult<impl IntoResponse> {
     let session_id = session.id().to_string();
 
     Ok(ws.on_upgrade(move |socket| async move {
@@ -46,7 +46,7 @@ async fn game_handler(
     state: Arc<AppState>,
     game_id: Uuid,
     session_id: String,
-) -> crate::error::Result<()> {
+) -> crate::error::AppResult<()> {
     let (sender, mut receiver) = socket.split();
     let rx = state.tx.subscribe();
     let tx = state.tx.clone();
@@ -179,7 +179,7 @@ async fn get_player_type(
     user: &Option<User>,
     receiver: &mut SplitStream<WebSocket>,
     message_service: &mut GameMessageService,
-) -> Result<PlayerType> {
+) -> AppResult<PlayerType> {
     let game = state.game_repo.get(game_id).await?;
 
     // if the user is the game master, use their username
@@ -254,7 +254,7 @@ async fn handle_broadcast(
     broadcast: GameBroadcast,
     game_id: &Uuid,
     message_service: &mut GameMessageService,
-) -> Result<()> {
+) -> AppResult<()> {
     if broadcast.game_id == game_id.to_owned() {
         message_service.send_text(&broadcast.message).await?;
     }
@@ -265,7 +265,7 @@ async fn handle_incoming_message(
     message: String,
     game_service: &GameActionService,
     broadcast_service: &GameBroadcastService,
-) -> Result<()> {
+) -> AppResult<()> {
     let action = serde_json::from_str::<GameAction>(&message)?;
     game_service.handle_action(&action).await?;
     broadcast_service.broadcast_action(&action).await?;

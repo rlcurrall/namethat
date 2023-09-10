@@ -20,6 +20,7 @@ pub mod models;
 pub mod repositories;
 pub mod services;
 pub mod session;
+pub mod view;
 
 #[derive(Clone, Debug)]
 pub struct AppState {
@@ -28,6 +29,13 @@ pub struct AppState {
     pub user_repo: UserRepo,
     pub game_repo: GameRepo,
     pub session_manager: SessionManager,
+}
+
+#[derive(Clone, Debug)]
+pub struct AppConfig {
+    pub database_url: String,
+    pub session_secret: String,
+    pub app_log: String,
 }
 
 #[derive(RustEmbed)]

@@ -47,5 +47,6 @@ impl AppRouter {
                     .put(profile::update)
                     .delete(profile::delete),
             )
+            .route("/assets/:path", get(home::static_handler))
     }
 }

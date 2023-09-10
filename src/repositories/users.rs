@@ -2,7 +2,7 @@ use sqlx::PgPool;
 use uuid::Uuid;
 
 use crate::{
-    error::{AppError, Result},
+    error::{AppError, AppResult},
     models::users::{NewUser, User, UserFilter, UserUpdate},
 };
 
@@ -16,7 +16,7 @@ impl UserRepo {
         Self { client }
     }
 
-    pub async fn insert(&self, new_user: NewUser) -> Result<User> {
+    pub async fn insert(&self, new_user: NewUser) -> AppResult<User> {
         // Verify that the NewUser password is hashed
         if !new_user.password.starts_with("$argon2") {
             return Err(AppError::ValidationError("Password is not hashed".into()));
@@ -37,7 +37,7 @@ impl UserRepo {
         Ok(user)
     }
 
-    pub async fn get(&self, id: Uuid) -> Result<User> {
+    pub async fn get(&self, id: Uuid) -> AppResult<User> {
         let user = sqlx::query_as!(
             User,
             r#"
@@ -52,7 +52,7 @@ impl UserRepo {
         Ok(user)
     }
 
-    pub async fn get_by_email(&self, email: String) -> Result<Option<User>> {
+    pub async fn get_by_email(&self, email: String) -> AppResult<Option<User>> {
         let user = sqlx::query_as!(
             User,
             r#"
@@ -67,7 +67,7 @@ impl UserRepo {
         Ok(user)
     }
 
-    pub async fn list(&self, filter: UserFilter) -> Result<Vec<User>> {
+    pub async fn list(&self, filter: UserFilter) -> AppResult<Vec<User>> {
         let query = sqlx::query_as!(
             User,
             r#"
@@ -84,7 +84,7 @@ impl UserRepo {
         Ok(users)
     }
 
-    pub async fn update(&self, user_id: Uuid, update: UserUpdate) -> Result<User> {
+    pub async fn update(&self, user_id: Uuid, update: UserUpdate) -> AppResult<User> {
         let query = sqlx::query_as!(
             User,
             r#"
@@ -103,7 +103,7 @@ impl UserRepo {
         Ok(update)
     }
 
-    pub async fn delete(&self, id: Uuid) -> Result<()> {
+    pub async fn delete(&self, id: Uuid) -> AppResult<()> {
         sqlx::query!(
             r#"
             DELETE FROM users

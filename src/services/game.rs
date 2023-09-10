@@ -4,7 +4,7 @@ use tokio::sync::broadcast::Sender;
 use uuid::Uuid;
 
 use crate::{
-    error::{AppError, Result},
+    error::{AppError, AppResult},
     models::games::{
         Game, GameAction, GameBroadcast, GameMessage, NewAnswer, NewRound, PlayerType,
     },
@@ -27,7 +27,7 @@ impl GameActionService {
         }
     }
 
-    pub async fn handle_action(&self, message: &GameAction) -> Result<()> {
+    pub async fn handle_action(&self, message: &GameAction) -> AppResult<()> {
         match message {
             GameAction::PlayerJoin { .. } => (),
             GameAction::StartRound { round } => self.start_round(round.to_owned()).await?,
@@ -46,7 +46,7 @@ impl GameActionService {
         Ok(())
     }
 
-    pub async fn start_round(&self, round: i32) -> Result<()> {
+    pub async fn start_round(&self, round: i32) -> AppResult<()> {
         let game = self.get_game().await?;
 
         if self.user_type != PlayerType::GameMaster {
@@ -76,7 +76,7 @@ impl GameActionService {
         Ok(())
     }
 
-    pub async fn add_user_answer(&self, round_id: &Uuid, answer: &str) -> Result<()> {
+    pub async fn add_user_answer(&self, round_id: &Uuid, answer: &str) -> AppResult<()> {
         let player_id = match self.user_type {
             PlayerType::Player { id, .. } => id,
             _ => return Err(AppError::AuthorizationError("User cannot answer".into())),
@@ -113,7 +113,7 @@ impl GameActionService {
         Ok(())
     }
 
-    pub async fn close_answers(&self, round_id: &Uuid) -> Result<()> {
+    pub async fn close_answers(&self, round_id: &Uuid) -> AppResult<()> {
         let game = self.game_repo.get_by_round_id(&round_id).await?;
         if self.game_id != game.id {
             return Err(AppError::ValidationError(
@@ -132,7 +132,7 @@ impl GameActionService {
         Ok(())
     }
 
-    pub async fn reveal_answer(&self, answer_id: &Uuid) -> Result<()> {
+    pub async fn reveal_answer(&self, answer_id: &Uuid) -> AppResult<()> {
         let game = self.game_repo.get_by_answer_id(&answer_id).await?;
         if self.game_id != game.id {
             return Err(AppError::ValidationError("Invalid answer id".into()));
@@ -149,7 +149,7 @@ impl GameActionService {
         Ok(())
     }
 
-    pub async fn like_answer(&self, answer_id: &Uuid) -> Result<()> {
+    pub async fn like_answer(&self, answer_id: &Uuid) -> AppResult<()> {
         let game = self.game_repo.get_by_answer_id(&answer_id).await?;
         if self.game_id != game.id {
             return Err(AppError::ValidationError("Invalid answer id".into()));
@@ -160,7 +160,7 @@ impl GameActionService {
         Ok(())
     }
 
-    pub async fn end_round(&self, round_id: &Uuid, winner: &Uuid) -> Result<()> {
+    pub async fn end_round(&self, round_id: &Uuid, winner: &Uuid) -> AppResult<()> {
         let game = self.game_repo.get_by_round_id(&round_id).await?;
         if self.game_id != game.id {
             return Err(AppError::ValidationError("Invalid round id".into()));
@@ -178,7 +178,7 @@ impl GameActionService {
         Ok(())
     }
 
-    pub async fn end_game(&self) -> Result<()> {
+    pub async fn end_game(&self) -> AppResult<()> {
         let game = self.get_game().await?;
 
         if self.user_type != PlayerType::GameMaster {
@@ -192,7 +192,7 @@ impl GameActionService {
         Ok(())
     }
 
-    async fn get_game(&self) -> Result<Game> {
+    async fn get_game(&self) -> AppResult<Game> {
         Ok(self.game_repo.get(&self.game_id).await?)
     }
 }
@@ -212,14 +212,14 @@ impl GameMessageService {
         }
     }
 
-    pub async fn send_text(&mut self, text: &str) -> Result<()> {
+    pub async fn send_text(&mut self, text: &str) -> AppResult<()> {
         self.sender
             .send(Message::Text(text.to_owned()))
             .await
             .map_err(|e| AppError::InternalError(e.to_string()))
     }
 
-    pub async fn send(&mut self, message: GameMessage) -> Result<()> {
+    pub async fn send(&mut self, message: GameMessage) -> AppResult<()> {
         let json = serde_json::to_string(&message)?;
         self.sender
             .send(Message::Text(json))
@@ -227,29 +227,29 @@ impl GameMessageService {
             .map_err(|e| AppError::InternalError(e.to_string()))
     }
 
-    pub async fn close(&mut self) -> Result<()> {
+    pub async fn close(&mut self) -> AppResult<()> {
         self.sender
             .send(Message::Close(None))
             .await
             .map_err(|e| AppError::InternalError(e.to_string()))
     }
 
-    pub async fn request_display_name(&mut self) -> Result<()> {
+    pub async fn request_display_name(&mut self) -> AppResult<()> {
         self.send(GameMessage::RequestDisplayName).await
     }
 
-    pub async fn unavailable_display_name(&mut self) -> Result<()> {
+    pub async fn unavailable_display_name(&mut self) -> AppResult<()> {
         self.send(GameMessage::UnavailableDisplayName).await
     }
 
-    pub async fn join_success(&mut self, player_type: &PlayerType) -> Result<()> {
+    pub async fn join_success(&mut self, player_type: &PlayerType) -> AppResult<()> {
         self.send(GameMessage::JoinSuccess {
             player_type: player_type.to_owned(),
         })
         .await
     }
 
-    pub async fn game_state(&mut self) -> Result<()> {
+    pub async fn game_state(&mut self) -> AppResult<()> {
         let state = self.game_repo.get_state(&self.game_id).await?;
         self.send(GameMessage::StateChange { state }).await
     }
@@ -271,7 +271,7 @@ impl GameBroadcastService {
         }
     }
 
-    pub async fn broadcast_action(&self, action: &GameAction) -> Result<()> {
+    pub async fn broadcast_action(&self, action: &GameAction) -> AppResult<()> {
         match action {
             GameAction::PlayerJoin { .. } => (),
             _ => {
@@ -282,20 +282,20 @@ impl GameBroadcastService {
         Ok(())
     }
 
-    pub async fn broadcast_game_state(&self) -> Result<()> {
+    pub async fn broadcast_game_state(&self) -> AppResult<()> {
         let state = self.game_repo.get_state(&self.game_id).await?;
         self.broadcast(GameMessage::StateChange { state })?;
         Ok(())
     }
 
-    pub async fn broadcast_new_player(&self, player_type: &PlayerType) -> Result<()> {
+    pub async fn broadcast_new_player(&self, player_type: &PlayerType) -> AppResult<()> {
         self.broadcast(GameMessage::NewPlayer {
             player_type: player_type.to_owned(),
         })?;
         Ok(())
     }
 
-    pub fn broadcast(&self, message: GameMessage) -> Result<()> {
+    pub fn broadcast(&self, message: GameMessage) -> AppResult<()> {
         let message = serde_json::to_string(&message)?;
         self.sender
             .send(GameBroadcast {

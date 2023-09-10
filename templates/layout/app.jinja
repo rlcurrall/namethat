@@ -1,0 +1,50 @@
+<!DOCTYPE html>
+<html lang="en" class="h-full bg-gray-900">
+
+<head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <title>NameThat | {% block title %}{{ title }}{% endblock title %}</title>
+    <link rel="icon" href="/assets/favicon.svg" />
+
+    <!-- Include TailwindCSS from CDN -->
+    <script src="https://cdn.tailwindcss.com"></script>
+
+    <!-- Include AplineJS Components from CDN -->
+    <script defer src="https://unpkg.com/alpinejs-component@latest/dist/component.min.js"></script>
+
+    <!-- Include AlpineJS from CDN -->
+    <script defer src="https://cdn.jsdelivr.net/npm/alpinejs@3.x.x/dist/cdn.min.js"></script>
+
+    <!-- Include WC Spinner from CDN -->
+    <script src="https://cdn.jsdelivr.net/npm/wc-spinners@1.1.1/dist/wc-spinners.min.js"></script>
+
+    <!-- Include Ko-fi -->
+    <script src='https://storage.ko-fi.com/cdn/widget/Widget_2.js'></script>
+</head>
+
+<body class="h-full flex flex-col">
+    <!-- Navigation Header -->
+    {%- import "components/nav.jinja" as nav -%}
+    {% call nav::navbar("error") %}
+
+    <main class="flex-1 flex flex-col">
+        <div class="relative isolate flex-1 flex flex-col overflow-hidden bg-gray-900">
+            <!-- Background -->
+            {%- import "components/hero-background.jinja" as hero -%}
+            {% call hero::heroBackground() %}
+
+            <!-- Content -->
+            <div class="flex-1 py-12 mx-auto w-full max-w-7xl px-2 sm:px-6 lg:px-8">
+                {% block content %}{% endblock %}
+            </div>
+        </div>
+    </main>
+
+    <div id="toast"></div>
+    <div id="modal"></div>
+
+    {% block scripts %}{% endblock %}
+</body>
+
+</html>

@@ -11,25 +11,25 @@ use serde_json::json;
 use uuid::Uuid;
 
 use crate::{
-    error::{AppError, Result},
+    error::{AppError, AppResult},
     models::users::NewUser,
     services::auth::AuthService,
-    AppState, Assets,
+    view, AppState,
 };
 
-pub async fn show_login_form(session: WritableSession) -> Result<impl IntoResponse> {
+pub async fn show_login_form(session: WritableSession) -> AppResult<impl IntoResponse> {
     if is_logged_in(&session) {
         Ok(Redirect::to("/games").into_response())
     } else {
-        Ok(Assets::render("login.html")?.into_response())
+        Ok(view::Login::new().to_html()?.into_response())
     }
 }
 
-pub async fn show_register_form(session: WritableSession) -> Result<impl IntoResponse> {
+pub async fn show_register_form(session: WritableSession) -> AppResult<impl IntoResponse> {
     if is_logged_in(&session) {
         Ok(Redirect::to("/games").into_response())
     } else {
-        Ok(Assets::render("register.html")?.into_response())
+        Ok(view::Register::new().to_html()?.into_response())
     }
 }
 
@@ -43,7 +43,7 @@ pub async fn login(
     State(state): State<Arc<AppState>>,
     mut session: WritableSession,
     Json(data): Json<Login>,
-) -> Result<impl IntoResponse> {
+) -> AppResult<impl IntoResponse> {
     if is_logged_in(&session) {
         return Err(AppError::ValidationError("Already logged in".to_string()));
     }
@@ -66,7 +66,7 @@ pub async fn register(
     State(state): State<Arc<AppState>>,
     mut session: WritableSession,
     Json(mut form): Json<NewUser>,
-) -> Result<impl IntoResponse> {
+) -> AppResult<impl IntoResponse> {
     if is_logged_in(&session) {
         return Err(AppError::ValidationError("Already logged in".into()));
     }

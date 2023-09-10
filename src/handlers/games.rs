@@ -2,47 +2,49 @@ use std::sync::Arc;
 
 use axum::{
     extract::{Path, State},
-    response::{IntoResponse, Redirect},
+    response::{Html, IntoResponse, Redirect},
     Json,
 };
 use serde::Deserialize;
 use uuid::Uuid;
 
 use crate::{
-    error::{AppError, Result},
+    error::{AppError, AppResult},
     extractors::auth::{ApiAuth, AuthUser, WebAuth},
     models::games::{GameFilter, NewGame, UpdateGame},
-    AppState, Assets,
+    view::{CreateGame, Games, PlayGame, RunGame},
+    AppState,
 };
 
-pub async fn games_page(_: WebAuth) -> Result<impl IntoResponse> {
-    Ok(Assets::render("games/index.html")?.into_response())
+pub async fn games_page(_: WebAuth) -> AppResult<Html<String>> {
+    Ok(Games::new().to_html()?)
 }
 
-pub async fn create_page(_: WebAuth) -> Result<impl IntoResponse> {
-    Ok(Assets::render("games/create.html")?.into_response())
+pub async fn create_page(_: WebAuth) -> AppResult<Html<String>> {
+    Ok(CreateGame::new().to_html()?)
 }
 
 pub async fn run_page(
     WebAuth(user): WebAuth,
     State(state): State<Arc<AppState>>,
     Path(game_id): Path<Uuid>,
-) -> Result<impl IntoResponse> {
+) -> AppResult<impl IntoResponse> {
     let game = state.game_repo.get(&game_id).await?;
 
     if game.user_id != user.id {
         return Ok(Redirect::to("/403").into_response());
     }
 
-    Ok(Assets::render("games/[id]/run.html")?.into_response())
+    Ok(RunGame::new(true).to_html()?.into_response())
 }
 
 pub async fn play_page(
     AuthUser(user): AuthUser,
     State(state): State<Arc<AppState>>,
     Path(game_id): Path<Uuid>,
-) -> Result<impl IntoResponse> {
+) -> AppResult<impl IntoResponse> {
     let game = state.game_repo.get(&game_id).await?;
+    let authenticated = user.is_some();
 
     if let Some(user) = user {
         if game.user_id == user.id {
@@ -50,13 +52,13 @@ pub async fn play_page(
         }
     }
 
-    Ok(Assets::render("games/[id]/play.html")?.into_response())
+    Ok(PlayGame::new(authenticated).to_html()?.into_response())
 }
 
 pub async fn list(
     ApiAuth(user): ApiAuth,
     State(state): State<Arc<AppState>>,
-) -> Result<impl IntoResponse> {
+) -> AppResult<impl IntoResponse> {
     let games = state
         .game_repo
         .list(GameFilter {
@@ -71,7 +73,7 @@ pub async fn create(
     ApiAuth(user): ApiAuth,
     State(state): State<Arc<AppState>>,
     Json(new_game): Json<NewGameRequest>,
-) -> Result<impl IntoResponse> {
+) -> AppResult<impl IntoResponse> {
     let game = state
         .game_repo
         .insert(NewGame {
@@ -87,7 +89,7 @@ pub async fn get(
     ApiAuth(user): ApiAuth,
     State(state): State<Arc<AppState>>,
     Path(game_id): Path<Uuid>,
-) -> Result<impl IntoResponse> {
+) -> AppResult<impl IntoResponse> {
     let game = state.game_repo.get(&game_id).await?;
 
     if game.user_id != user.id {
@@ -104,7 +106,7 @@ pub async fn update(
     State(state): State<Arc<AppState>>,
     Path(game_id): Path<Uuid>,
     Json(game_update): Json<UpdateGameRequest>,
-) -> Result<impl IntoResponse> {
+) -> AppResult<impl IntoResponse> {
     let game = state.game_repo.get(&game_id).await?;
 
     if game.user_id != user.id {
@@ -130,7 +132,7 @@ pub async fn delete(
     ApiAuth(user): ApiAuth,
     State(state): State<Arc<AppState>>,
     Path(game_id): Path<Uuid>,
-) -> Result<impl IntoResponse> {
+) -> AppResult<impl IntoResponse> {
     let game = state.game_repo.get(&game_id).await?;
 
     if game.user_id != user.id {

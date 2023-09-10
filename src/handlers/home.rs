@@ -1,27 +1,41 @@
-use axum::response::IntoResponse;
+use axum::{
+    extract::Path,
+    response::{Html, IntoResponse},
+};
 
-use crate::Assets;
+use crate::{
+    error::AppResult,
+    extractors::auth::AuthUser,
+    view::{Forbidden, Index, NotFound, ServerError, ServiceUnavailable, Unauthorized},
+    Assets,
+};
 
-pub async fn index() -> impl IntoResponse {
-    Assets::render("index.html")
+pub async fn index(AuthUser(user): AuthUser) -> AppResult<Html<String>> {
+    Ok(Index::new(user.is_some()).to_html()?)
 }
 
-pub async fn unauthorized() -> impl IntoResponse {
-    Assets::render("401.html")
+pub async fn unauthorized(AuthUser(user): AuthUser) -> AppResult<Html<String>> {
+    Ok(Unauthorized::new(user.is_some()).to_html()?)
 }
 
-pub async fn forbidden() -> impl IntoResponse {
-    Assets::render("403.html")
+pub async fn forbidden(AuthUser(user): AuthUser) -> AppResult<Html<String>> {
+    Ok(Forbidden::new(user.is_some()).to_html()?)
 }
 
-pub async fn not_found() -> impl IntoResponse {
-    Assets::render("404.html")
+pub async fn not_found(AuthUser(user): AuthUser) -> AppResult<Html<String>> {
+    Ok(NotFound::new(user.is_some()).to_html()?)
 }
 
-pub async fn internal_server_error() -> impl IntoResponse {
-    Assets::render("500.html")
+pub async fn internal_server_error(AuthUser(user): AuthUser) -> AppResult<Html<String>> {
+    Ok(ServerError::new(user.is_some()).to_html()?)
 }
 
-pub async fn service_unavailable() -> impl IntoResponse {
-    Assets::render("503.html")
+pub async fn service_unavailable(AuthUser(user): AuthUser) -> AppResult<Html<String>> {
+    Ok(ServiceUnavailable::new(user.is_some()).to_html()?)
+}
+
+// static handler using Assets
+pub async fn static_handler(Path(path): Path<String>) -> AppResult<impl IntoResponse> {
+    tracing::info!("static_handler: path={}", path);
+    Assets::render(&path)
 }

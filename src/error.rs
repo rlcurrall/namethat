@@ -6,7 +6,7 @@ use axum::{
 use serde::{Deserialize, Serialize};
 use tokio::sync::broadcast::error::SendError;
 
-pub type Result<T> = std::result::Result<T, AppError>;
+pub type AppResult<T> = std::result::Result<T, AppError>;
 
 #[derive(Debug)]
 pub enum AppError {
@@ -64,6 +64,12 @@ impl From<axum::Error> for AppError {
 
 impl From<uuid::Error> for AppError {
     fn from(error: uuid::Error) -> Self {
+        AppError::InternalError(format!("{}", error))
+    }
+}
+
+impl From<hyper::Error> for AppError {
+    fn from(error: hyper::Error) -> Self {
         AppError::InternalError(format!("{}", error))
     }
 }

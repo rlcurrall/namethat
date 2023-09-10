@@ -1,23 +1,28 @@
 use std::sync::Arc;
 
-use axum::{extract::State, response::IntoResponse, Json};
+use axum::{
+    extract::State,
+    response::{Html, IntoResponse},
+    Json,
+};
 use axum_sessions::extractors::WritableSession;
 use serde::Deserialize;
 use serde_json::json;
 
 use crate::{
-    error::{AppError, Result},
+    error::{AppError, AppResult},
     extractors::auth::{ApiAuth, WebAuth},
     models::users::UserUpdate,
     services::auth::AuthService,
-    AppState, Assets,
+    view::Profile,
+    AppState,
 };
 
-pub async fn show_profile(_: WebAuth) -> Result<impl IntoResponse> {
-    Ok(Assets::render("profile.html")?.into_response())
+pub async fn show_profile(_: WebAuth) -> AppResult<Html<String>> {
+    Ok(Profile::new().to_html()?)
 }
 
-pub async fn get(ApiAuth(user): ApiAuth) -> Result<impl IntoResponse> {
+pub async fn get(ApiAuth(user): ApiAuth) -> AppResult<impl IntoResponse> {
     Ok(Json(user).into_response())
 }
 
@@ -25,7 +30,7 @@ pub async fn update(
     ApiAuth(user): ApiAuth,
     State(state): State<Arc<AppState>>,
     Json(update_request): Json<UpdateUserRequest>,
-) -> Result<impl IntoResponse> {
+) -> AppResult<impl IntoResponse> {
     let password = match (update_request.new_password, update_request.old_password) {
         (Some(new_password), Some(old_password)) => {
             if !AuthService::check_password(&old_password, &user.password)? {
@@ -57,7 +62,7 @@ pub async fn delete(
     mut session: WritableSession,
     ApiAuth(user): ApiAuth,
     State(state): State<Arc<AppState>>,
-) -> Result<impl IntoResponse> {
+) -> AppResult<impl IntoResponse> {
     session.destroy();
     state.user_repo.delete(user.id).await?;
     Ok(Json(json!({ "success": true })).into_response())
