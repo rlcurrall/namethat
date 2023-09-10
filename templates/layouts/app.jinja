@@ -4,7 +4,7 @@
 <head>
     <meta charset="UTF-8" />
     <meta name="viewport" content="width=device-width, initial-scale=1.0" />
-    <title>NameThat | {% block title %}{{ title }}{% endblock %}</title>
+    <title>NameThat | {% block title %}{{ title }}{% endblock title %}</title>
     <link rel="icon" href="/assets/favicon.svg" />
 
     <!-- Include TailwindCSS from CDN -->
@@ -25,12 +25,24 @@
 
 <body class="h-full flex flex-col">
     <!-- Navigation Header -->
-    {%- import "components/nav.jinja" as nav -%}
-    {% call nav::navbar("error") %}
+    {% include "includes/navbar.jinja" %}
 
-    <main class="flex-grow flex items-center justify-center">
-        {% block content %}{% endblock %}
+    <main class="flex-1 flex flex-col">
+        <div class="relative isolate flex-1 flex flex-col overflow-hidden bg-gray-900">
+            <!-- Background -->
+            {% include "includes/hero-background.jinja" %}
+
+            <!-- Content -->
+            <div class="flex-1 py-12 mx-auto w-full max-w-7xl px-2 sm:px-6 lg:px-8">
+                {% block content %}{% endblock %}
+            </div>
+        </div>
     </main>
+
+    <div id="toast"></div>
+    <div id="modal"></div>
+
+    {% block scripts %}{% endblock %}
 </body>
 
 </html>

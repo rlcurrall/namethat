@@ -1,7 +1,7 @@
 use askama::Template;
 
 #[derive(Template)]
-#[template(path = "index.jinja")]
+#[template(path = "pages/index.jinja")]
 pub struct Index {
     authenticated: bool,
 }
@@ -13,7 +13,7 @@ impl Index {
 }
 
 #[derive(Template)]
-#[template(path = "auth/login.jinja")]
+#[template(path = "pages/auth/login.jinja")]
 pub struct Login {}
 
 impl Login {
@@ -23,7 +23,7 @@ impl Login {
 }
 
 #[derive(Template)]
-#[template(path = "auth/register.jinja")]
+#[template(path = "pages/auth/register.jinja")]
 pub struct Register {}
 
 impl Register {
@@ -33,7 +33,7 @@ impl Register {
 }
 
 #[derive(Template)]
-#[template(path = "profile.jinja")]
+#[template(path = "pages/profile.jinja")]
 pub struct Profile {
     authenticated: bool,
 }
@@ -47,7 +47,7 @@ impl Profile {
 }
 
 #[derive(Template)]
-#[template(path = "error/401.jinja")]
+#[template(path = "pages/error/401.jinja")]
 pub struct Unauthorized {
     authenticated: bool,
 }
@@ -59,7 +59,7 @@ impl Unauthorized {
 }
 
 #[derive(Template)]
-#[template(path = "error/403.jinja")]
+#[template(path = "pages/error/403.jinja")]
 pub struct Forbidden {
     authenticated: bool,
 }
@@ -71,7 +71,7 @@ impl Forbidden {
 }
 
 #[derive(Template)]
-#[template(path = "error/404.jinja")]
+#[template(path = "pages/error/404.jinja")]
 pub struct NotFound {
     authenticated: bool,
 }
@@ -83,7 +83,7 @@ impl NotFound {
 }
 
 #[derive(Template)]
-#[template(path = "error/500.jinja")]
+#[template(path = "pages/error/500.jinja")]
 pub struct ServerError {
     authenticated: bool,
 }
@@ -95,7 +95,7 @@ impl ServerError {
 }
 
 #[derive(Template)]
-#[template(path = "error/503.jinja")]
+#[template(path = "pages/error/503.jinja")]
 pub struct ServiceUnavailable {
     authenticated: bool,
 }
@@ -107,7 +107,7 @@ impl ServiceUnavailable {
 }
 
 #[derive(Template)]
-#[template(path = "games/index.jinja")]
+#[template(path = "pages/games/index.jinja")]
 pub struct Games {
     authenticated: bool,
 }
@@ -121,7 +121,7 @@ impl Games {
 }
 
 #[derive(Template)]
-#[template(path = "games/create.jinja")]
+#[template(path = "pages/games/create.jinja")]
 pub struct CreateGame {
     authenticated: bool,
 }
@@ -135,7 +135,7 @@ impl CreateGame {
 }
 
 #[derive(Template)]
-#[template(path = "games/play.jinja")]
+#[template(path = "pages/games/play.jinja")]
 pub struct PlayGame {
     authenticated: bool,
 }
@@ -147,7 +147,7 @@ impl PlayGame {
 }
 
 #[derive(Template)]
-#[template(path = "games/run.jinja")]
+#[template(path = "pages/games/run.jinja")]
 pub struct RunGame {
     authenticated: bool,
 }
